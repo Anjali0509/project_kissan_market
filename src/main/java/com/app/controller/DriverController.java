@@ -1,5 +1,8 @@
 package com.app.controller;
 
+import com.app.dto.DriverDto;
+import java.util.Base64;
+import java.util.ArrayList;
 import com.app.model.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -72,7 +75,6 @@ public class DriverController {
     @PostMapping("/getDriver")
     public ResponseEntity<Object> getDriver(@RequestBody Map<String, Integer> requestBody) {
         try {
-            // Extract the ID from the request body
             Integer driverId = requestBody.get("driverId");
             if (driverId == null) {
                 return ResponseEntity.ok(Map.of(
@@ -80,18 +82,16 @@ public class DriverController {
                         "message", "Driver ID is required."));
             }
 
-            // Corrected SQL query to use 'driverId'
             String sql = "SELECT * FROM driver WHERE driverId = ?";
             Driver driver = jdbcTemplate.queryForObject(sql, driverRowMapper(), new Object[] { driverId });
 
+            DriverDto dto = convertToDto(driver);
+
             return ResponseEntity.ok(Map.of(
                     "error", false,
-                    "data", driver));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.ok(Map.of(
-                    "error", true,
-                    "message", ex.getMessage()));
+                    "data", dto));
         } catch (Exception ex) {
+            ex.printStackTrace();
             return ResponseEntity.ok(Map.of(
                     "error", true,
                     "message", "Driver not found or invalid input!"));
@@ -99,15 +99,44 @@ public class DriverController {
     }
 
     // Fetch all drivers
-   @PostMapping("/all")
-    public ResponseEntity<List<Driver>> getAllDrivers() {
+    @PostMapping("/all")
+    public ResponseEntity<Object> getAllDrivers() {
         try {
             String sql = "SELECT * FROM driver";
             List<Driver> drivers = jdbcTemplate.query(sql, driverRowMapper());
-            return ResponseEntity.ok(drivers);
+
+            List<DriverDto> driverDtos = new ArrayList<>();
+            for (Driver d : drivers) {
+                driverDtos.add(convertToDto(d));
+            }
+
+            return ResponseEntity.ok(Map.of("error", false, "data", driverDtos));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "error", true,
+                    "message", "Something went wrong while fetching drivers"));
         }
+    }
+
+    private DriverDto convertToDto(Driver driver) {
+        DriverDto dto = new DriverDto();
+        dto.setDriverId(driver.getDriverId());
+        dto.setDriverName(driver.getDriverName());
+        dto.setVehicleNo(driver.getVehicleNo());
+        dto.setAddress(driver.getAddress());
+        dto.setRatePer100Km(driver.getRatePer100Km());
+        dto.setMaxCapacity(driver.getMaxCapacity());
+        dto.setDrivingExperience(driver.getDrivingExperience());
+        dto.setPhoneNo(driver.getPhoneNo());
+        dto.setRating(driver.getRating());
+
+        if (driver.getDriverPhoto() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(driver.getDriverPhoto());
+            dto.setDriverPhotoBase64(base64Image);
+        }
+
+        return dto;
     }
 
     // RowMapper for Driver
