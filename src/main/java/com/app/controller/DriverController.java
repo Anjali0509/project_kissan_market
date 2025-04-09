@@ -98,6 +98,22 @@ public class DriverController {
         }
     }
 
+    @GetMapping("/photo/{driverId}")
+public ResponseEntity<byte[]> getDriverPhoto(@PathVariable int driverId) {
+    try {
+        String sql = "SELECT driverPhoto FROM driver WHERE driverId = ?";
+        byte[] photo = jdbcTemplate.queryForObject(sql, byte[].class, driverId);
+
+        return ResponseEntity
+                .ok()
+                .header("Content-Type", "image/jpeg") // or "image/png" based on your image
+                .body(photo);
+
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+}
+
     // Fetch all drivers
     @PostMapping("/all")
     public ResponseEntity<Object> getAllDrivers() {
