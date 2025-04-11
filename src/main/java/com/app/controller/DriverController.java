@@ -71,6 +71,49 @@ public class DriverController {
         }
     }
 
+    @PostMapping("/update-photo")
+public ResponseEntity<Object> updateDriverPhoto(
+        @RequestParam int driverId,
+        @RequestParam MultipartFile driverPhoto) {
+
+    try {
+        if (driverPhoto == null || driverPhoto.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "No photo file provided."));
+        }
+
+        String checkSql = "SELECT COUNT(*) FROM driver WHERE driverId = ?";
+        int count = jdbcTemplate.queryForObject(checkSql, Integer.class, driverId);
+
+        if (count == 0) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "status", "error",
+                    "message", "Driver not found."));
+        }
+
+        String updateSql = "UPDATE driver SET driverPhoto = ? WHERE driverId = ?";
+        int result = jdbcTemplate.update(updateSql, driverPhoto.getBytes(), driverId);
+
+        if (result > 0) {
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Driver photo updated successfully."));
+        } else {
+            return ResponseEntity.ok(Map.of(
+                    "status", "error",
+                    "message", "Failed to update driver photo."));
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "status", "error",
+                "message", "Something went wrong while updating the photo."));
+    }
+}
+
+
     // Get Driver by ID
     @PostMapping("/getDriver")
     public ResponseEntity<Object> getDriver(@RequestBody Map<String, Integer> requestBody) {
