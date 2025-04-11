@@ -43,7 +43,7 @@ public class DriverController {
 
             if (count > 0) {
                 return ResponseEntity.ok(Map.of(
-                        "error", true,
+                        "status", "error",
                         "message", "Driver with the same vehicle number or phone number already exists."));
             }
 
@@ -56,17 +56,17 @@ public class DriverController {
 
             if (result > 0) {
                 return ResponseEntity.ok(Map.of(
-                        "error", false,
+                        "status", "success",
                         "message", "Driver saved successfully!"));
             } else {
                 return ResponseEntity.ok(Map.of(
-                        "error", true,
+                        "status", "error",
                         "message", "Failed to save driver!"));
             }
         } catch (Exception e) {
             e.printStackTrace(); // Log the error for debugging
             return ResponseEntity.ok(Map.of(
-                    "error", true,
+                    "status", "error",
                     "message", "An error occurred while saving the driver. Please try again!"));
         }
     }
@@ -78,7 +78,7 @@ public class DriverController {
             Integer driverId = requestBody.get("driverId");
             if (driverId == null) {
                 return ResponseEntity.ok(Map.of(
-                        "error", true,
+                        "status", "error",
                         "message", "Driver ID is required."));
             }
 
@@ -88,12 +88,12 @@ public class DriverController {
             DriverDto dto = convertToDto(driver);
 
             return ResponseEntity.ok(Map.of(
-                    "error", false,
+                    "status", "success",
                     "data", dto));
         } catch (Exception ex) {
             ex.printStackTrace();
             return ResponseEntity.ok(Map.of(
-                    "error", true,
+                    "status", "error",
                     "message", "Driver not found or invalid input!"));
         }
     }
@@ -126,11 +126,11 @@ public ResponseEntity<byte[]> getDriverPhoto(@PathVariable int driverId) {
                 driverDtos.add(convertToDto(d));
             }
 
-            return ResponseEntity.ok(Map.of("error", false, "data", driverDtos));
+            return ResponseEntity.ok(Map.of("status", "success", "data", driverDtos));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                    "error", true,
+                    "status", "error",
                     "message", "Something went wrong while fetching drivers"));
         }
     }
